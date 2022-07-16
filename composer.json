@@ -1,0 +1,17 @@
+{
+    "name": "andikaryanto11/laravelgraphql",
+    "description": "Graphql package for Laravel",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Laravelgraphql\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "andik aryanto"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
