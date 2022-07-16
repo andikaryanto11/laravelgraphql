@@ -13,5 +13,7 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {}
+    "require": {
+        "webonyx/graphql-php": "dev-master"
+    }
 }
