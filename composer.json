@@ -23,7 +23,7 @@
                 "LaravelGraphQL\\App\\Providers\\GraphQLProvider"
             ],
             "aliases": {
-                "LaraveCommon": "LaravelGraphQL\\System\\Support\\Facades\\GraphQL"
+                "GraphQL": "LaravelGraphQL\\System\\Support\\Facades\\GraphQL"
             }
         }
     }

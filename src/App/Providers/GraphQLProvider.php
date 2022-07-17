@@ -29,6 +29,19 @@ class GraphQLProvider extends ServiceProvider
     {
        
         $this->loadRoutesFrom(__DIR__ . '/../../Routes/graphql.php');
+        $this->publishConfig();
        
+    }
+
+    /**
+     * Publish all config
+     *
+     * @return void
+     */
+    private function publishConfig()
+    {
+        $this->publishes([
+            __DIR__ . '/../../Config/graphql.php' => config_path('graphql.php'),
+        ], 'graphql-config');
     }
 }

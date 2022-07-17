@@ -7,9 +7,22 @@ use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use LaravelGraphQL\System\Support\Facades\GraphQL as FacadesGraphQL;
 
 class GraphQLController extends Controller
 {
+    /**
+     *
+     * @param FacadesGraphQL $graphQL
+     */
+    protected FacadesGraphQL $graphQL;
+
+    public function __construct(
+        FacadesGraphQL $graphQL
+    )
+    {
+        $this->graphQL = $graphQL;  
+    }
 
     /**
      * /graphql
@@ -18,6 +31,7 @@ class GraphQLController extends Controller
      */
     public function index()
     {
+        $this->graphQL->buildResolver();
         $queryType = new ObjectType([
             'name' => 'Query',
             'fields' => [

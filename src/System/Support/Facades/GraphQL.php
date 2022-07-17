@@ -2,9 +2,20 @@
 
 namespace LaravelGraphQL\System\Support\Facades;
 
-use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Facades\Facade;
+use LaravelGraphQL\GraphQL as RealGraphQL;
 
-class GraphQL
+/**
+ * @method mixed buildResolver()
+ */
+class GraphQL extends Facade
 {
-    use Macroable;
+    /**
+     * 
+     * @inheritdoc
+     */
+    protected static function getFacadeAccessor()
+    {
+        return RealGraphQL::class;
+    }
 }
