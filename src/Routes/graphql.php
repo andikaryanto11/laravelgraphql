@@ -1,6 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use LaravelGraphql\App\Http\Controllers\GraphqlController;
+use LaravelGraphQL\App\Http\Controllers\GraphQLController;
 
-Route::post('/graphql', [GraphqlController::class, 'index']);
+Route::post('/graphql', [GraphQLController::class, 'index']);
