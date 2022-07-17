@@ -15,5 +15,16 @@
     "minimum-stability": "dev",
     "require": {
         "webonyx/graphql-php": "dev-master"
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": [],
+            "providers": [
+                "LaravelGraphQL\\App\\Providers\\GraphQLProvider"
+            ],
+            "aliases": {
+                "LaraveCommon": "LaravelGraphQL\\System\\Support\\Facades\\GraphQL"
+            }
+        }
     }
 }
