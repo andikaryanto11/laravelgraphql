@@ -2,23 +2,23 @@
 
 namespace LaravelGraphQL\App\Http\Controllers;
 
+use GraphQL\GraphQL as GraphQLGraphQL;
 use Illuminate\Routing\Controller;
-use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
-use LaravelGraphQL\System\Support\Facades\GraphQL as FacadesGraphQL;
+use LaravelGraphQL\GraphQL;
 
 class GraphQLController extends Controller
 {
     /**
      *
-     * @param FacadesGraphQL $graphQL
+     * @param GraphQL $graphQL
      */
-    protected FacadesGraphQL $graphQL;
+    protected GraphQL $graphQL;
 
     public function __construct(
-        FacadesGraphQL $graphQL
+        GraphQL $graphQL
     )
     {
         $this->graphQL = $graphQL;  
@@ -31,23 +31,8 @@ class GraphQLController extends Controller
      */
     public function index()
     {
-        $this->graphQL->buildResolver();
-        $queryType = new ObjectType([
-            'name' => 'Query',
-            'fields' => [
-                'echo' => [
-                    'type' => Type::string(),
-                    'args' => [
-                        'message' => Type::nonNull(Type::string()),
-                    ],
-                    'resolve' => fn ($rootValue, array $args): string => $rootValue['prefix'] . $args['message'],
-                ],
-            ],
-        ]);
-
-        $schema = new Schema([
-            'query' => $queryType
-        ]);
+        $this->graphQL->buildResolvers();
+        $schema = $this->graphQL->buildSchema();
         
         $rawInput = file_get_contents('php://input');
         $input = json_decode($rawInput, true);
@@ -56,7 +41,7 @@ class GraphQLController extends Controller
 
         try {
             $rootValue = ['prefix' => 'You said: '];
-            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variableValues);
+            $result = GraphQLGraphQL::executeQuery($schema, $query, $rootValue, null, $variableValues);
             $output = $result->toArray();
         } catch (\Exception $e) {
             $output = [
