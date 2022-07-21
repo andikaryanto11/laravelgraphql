@@ -5,8 +5,8 @@ namespace LaravelGraphQL;
 
 class TypeBuilder
 {
-    protected array $queries = [];
-    protected array $mutations = [];
+    protected string $queries = '';
+    protected string $mutations = '';
 
     /**
      * Add string query
@@ -14,9 +14,9 @@ class TypeBuilder
      * @param string $query
      * @return void
      */
-    public function addQuery(string $name, string $arg, string $type)
+    public function addQuery(string $name, string $arg, string $type, $description)
     {
-        $this->queries[] = "$name $arg: $type";
+        $this->queries .= '"""' . $description . '"""'. " \n $name $arg: $type \n";
     }
 
     /**
@@ -25,9 +25,9 @@ class TypeBuilder
      * @param string $mutation
      * @return void
      */
-    public function addMutation(string $name, string $arg, string $type)
+    public function addMutation(string $name, string $arg, string $type, $description)
     {
-        $this->mutations[] = "$name $arg: $type";
+        $this->mutations .= '"""' . $description . '"""'. " \n $name $arg: $type \n";
     }
 
     public function buildArgument(string $arg){
@@ -54,6 +54,11 @@ class TypeBuilder
         return trim($type);
     }
 
+    public function buildDescription($description){
+        $desc = str_replace(['@desc', '*'], ['', ''], $description);
+        return trim($desc);
+    }
+
     /**
      * Build query and mutation type
      *
@@ -63,10 +68,10 @@ class TypeBuilder
     {
         $type = '';
         if (!empty($this->queries))
-            $type .= $this->buildQuery(implode("\n", $this->queries));
+            $type .= $this->buildQuery($this->queries);
 
         if (!empty($this->mutations))
-            $type .= '\n\n' . $this->buildMutation(implode("\n", $this->mutations));
+            $type .= "\n\n" . $this->buildMutation($this->mutations);
 
         return $type;
     }

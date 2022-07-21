@@ -69,14 +69,15 @@ class GraphQL
                         if(count($matches) > 0 && isset($matches[0][0])){
                             $arg = $this->typeBuilder->buildArgument($matches[0][1]);
                             $type = $this->typeBuilder->buildType($matches[0][2]);
+                            $desc = $this->typeBuilder->buildDescription($matches[0][3]);
                             if (strpos($matches[0][0], '@query') !== false){
                                 $this->queries[$reflectorFunction->name] = $this->app->get($resolver);
-                                $this->typeBuilder->addQuery($reflectorFunction->name, $arg, $type);
+                                $this->typeBuilder->addQuery($reflectorFunction->name, $arg, $type, $desc);
                             } 
                             
                             if (strpos($matches[0][0], '@mutation') !== false){
                                 $this->mutation[$reflectorFunction->name] = $this->app->get($resolver);
-                                $this->typeBuilder->addMutation($reflectorFunction->name, $arg, $type);
+                                $this->typeBuilder->addMutation($reflectorFunction->name, $arg, $type, $desc);
                             }
 
 
