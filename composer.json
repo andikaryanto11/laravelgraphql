@@ -14,7 +14,8 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "webonyx/graphql-php": "dev-master"
+        "webonyx/graphql-php": "dev-master",
+        "andikaryanto11/laravelcommon": "dev-main"
     },
     "extra": {
         "laravel": {
@@ -26,5 +27,11 @@
                 "GraphQL": "LaravelGraphQL\\System\\Support\\Facades\\GraphQL"
             }
         }
-    }
+    },
+    "repositories": [
+        {
+            "url": "https://github.com/andikaryanto11/laravelcommon.git",
+            "type": "git"
+        }
+    ]
 }

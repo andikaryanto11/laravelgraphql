@@ -4,8 +4,52 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ccc44b3911393c8526915d71a23ea74",
+    "content-hash": "c808567a8ab590434129d9c1cd68107b",
     "packages": [
+        {
+            "name": "andikaryanto11/laravelcommon",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/andikaryanto11/laravelcommon.git",
+                "reference": "f0916508401d88d991001ac30de71d1352b58c01"
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "squizlabs/php_codesniffer": "4.0.x-dev"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "dont-discover": [],
+                    "providers": [
+                        "LaravelCommon\\App\\Providers\\CommonAppServiceProvider"
+                    ],
+                    "aliases": {
+                        "LaraveCommon": "LaravelCommon\\System\\Support\\Facades\\Common"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LaravelCommon\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andik Aryanto",
+                    "email": "andik.aryantoo@gmail.com"
+                }
+            ],
+            "description": "Contains common class that can be used in Ci4 dependency injection of symfony",
+            "time": "2022-07-17T03:24:11+00:00"
+        },
         {
             "name": "webonyx/graphql-php",
             "version": "dev-master",
@@ -83,7 +127,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "webonyx/graphql-php": 20
+        "webonyx/graphql-php": 20,
+        "andikaryanto11/laravelcommon": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
