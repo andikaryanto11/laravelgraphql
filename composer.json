@@ -4,7 +4,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Laravelgraphql\\": "src/"
+            "LaravelGraphQL\\": "src/"
         }
     },
     "authors": [
@@ -13,5 +13,18 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {}
+    "require": {
+        "webonyx/graphql-php": "dev-master"
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": [],
+            "providers": [
+                "LaravelGraphQL\\App\\Providers\\GraphQLProvider"
+            ],
+            "aliases": {
+                "GraphQL": "LaravelGraphQL\\System\\Support\\Facades\\GraphQL"
+            }
+        }
+    }
 }
