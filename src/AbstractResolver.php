@@ -9,7 +9,7 @@ abstract class AbstractResolver
 
     protected $source;
     protected array $args;
-    protected $context;
+    protected Context $context;
     protected ResolveInfo $info;
 
     /**
@@ -66,7 +66,7 @@ abstract class AbstractResolver
      *
      * @return  self
      */ 
-    public function setContext($context)
+    public function setContext(Context $context)
     {
         $this->context = $context;
 
