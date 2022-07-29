@@ -2,11 +2,13 @@
 
 namespace LaravelGraphQL\App\Http\Controllers;
 
+use GraphQL\Error\FormattedError;
 use GraphQL\GraphQL as GraphQLGraphQL;
 use Illuminate\Routing\Controller;
 use GraphQL\Type\Schema;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use Illuminate\Http\Request;
 use LaravelGraphQL\GraphQL;
 
 class GraphQLController extends Controller
@@ -29,9 +31,9 @@ class GraphQLController extends Controller
      *
      * @return void
      */
-    public function index()
+    public function index(Request $request)
     {
-        $this->graphQL->buildResolvers();
+        $this->graphQL->buildResolvers($request);
         $schema = $this->graphQL->buildSchema();
         
         $rawInput = file_get_contents('php://input');
@@ -43,11 +45,11 @@ class GraphQLController extends Controller
             $rootValue = ['prefix' => 'You said: '];
             $result = GraphQLGraphQL::executeQuery($schema, $query, $rootValue, null, $variableValues);
             $output = $result->toArray();
-        } catch (\Exception $e) {
+        } catch (\LaravelGraphQL\GraphQLException $e) {
             $output = [
                 'errors' => [
                     [
-                        'message' => $e->getMessage()
+                        FormattedError::createFromException($e)
                     ]
                 ]
             ];

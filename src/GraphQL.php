@@ -3,9 +3,12 @@
 namespace LaravelGraphQL;
 
 use GraphQL\Executor\Executor;
-use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ResolveInfo;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Http\Request;
+use LaravelCommon\ViewModels\AbstractCollection;
+use LaravelCommon\ViewModels\AbstractViewModel;
+use LaravelGraphQL\Contexts\Token;
 use ReflectionClass;
 use ReflectionMethod;
 
@@ -29,22 +32,36 @@ class GraphQL
     protected TypeBuilder $typeBuilder;
 
     /**
+     * @var Context
+     */
+    protected Context $graphqlContext;
+
+    /**
+     * @var Token
+     */
+    protected Token $contextToken;
+
+    /**
      * Undocumented function
      *
      * @param Container $app
      */
     public function __construct(
-        Container $app, 
-        TypeBuilder $typeBuilder)
-    {
+        Container $app,
+        TypeBuilder $typeBuilder,
+        Context $graphqlContext,
+        Token $contextToken
+    ) {
         $this->app = $app;
         $this->typeBuilder = $typeBuilder;
+        $this->graphqlContext = $graphqlContext;
+        $this->contextToken = $contextToken;
     }
 
-    public function buildResolvers()
+    public function buildResolvers(Request $request)
     {
 
-        $this->setResolvers();
+        $this->setResolvers($request);
     }
 
     private function extractResolvers()
@@ -66,21 +83,19 @@ class GraphQL
                     preg_match_all($pattern, $doc, $matches, PREG_PATTERN_ORDER);
 
                     if (!empty($matches)) {
-                        if(count($matches) > 0 && isset($matches[0][0])){
+                        if (count($matches) > 0 && isset($matches[0][0])) {
                             $arg = $this->typeBuilder->buildArgument($matches[0][1]);
                             $type = $this->typeBuilder->buildType($matches[0][2]);
                             $desc = $this->typeBuilder->buildDescription($matches[0][3]);
-                            if (strpos($matches[0][0], '@query') !== false){
+                            if (strpos($matches[0][0], '@query') !== false) {
                                 $this->queries[$reflectorFunction->name] = $this->app->get($resolver);
                                 $this->typeBuilder->addQuery($reflectorFunction->name, $arg, $type, $desc);
-                            } 
-                            
-                            if (strpos($matches[0][0], '@mutation') !== false){
+                            }
+
+                            if (strpos($matches[0][0], '@mutation') !== false) {
                                 $this->mutation[$reflectorFunction->name] = $this->app->get($resolver);
                                 $this->typeBuilder->addMutation($reflectorFunction->name, $arg, $type, $desc);
                             }
-
-
                         }
                     }
                 }
@@ -88,7 +103,8 @@ class GraphQL
         }
     }
 
-    public function getResolvers(){
+    public function getResolvers()
+    {
         $this->extractResolvers();
         return [
             'Query' => $this->queries,
@@ -101,7 +117,8 @@ class GraphQL
      *
      * @return \GraphQL\Type\Schema
      */
-    public function buildSchema(){
+    public function buildSchema()
+    {
         $this->buildDefaultSchema();
         $this->buildUserDefineSchema();
         return \GraphQL\Utils\BuildSchema::build($this->schema);
@@ -142,51 +159,66 @@ class GraphQL
      *
      * @return void
      */
-    private function setResolvers()
+    private function setResolvers(Request $request)
     {
         $resolvers = $this->getResolvers();
-        Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info) use ($resolvers) {
-            $fieldName = $info->fieldName;
 
-            if (is_null($fieldName)) {
-                throw new \Exception('Could not get $fieldName from ResolveInfo');
-            }
+        $contexts = [
+            $this->contextToken
+        ];
 
-            if (is_null($info->parentType)) {
-                throw new \Exception('Could not get $parentType from ResolveInfo');
-            }
+        $graphqlContext = $this->graphqlContext;
 
-            $parentTypeName = $info->parentType->name;
+        Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info) 
+            use ($resolvers, $request, $contexts, $graphqlContext ) {
+                try{
+                     $fieldName = $info->fieldName;
 
-            if (isset($resolvers[$parentTypeName])) {
-                $resolver = $resolvers[$parentTypeName];
-
-                if (is_array($resolver)) {
-                    if (array_key_exists($fieldName, $resolver)) {
-                        $value = $resolver[$fieldName];
-
-                        $value->setSource($source);
-                        // $value->setArgs($args);
-                        $value->setContext($source);
-                        $value->setInfo($info);
-
-                        $argsValues = array_values($args);
-                        return $value->$fieldName(...$argsValues);
-
-                        // return is_callable($value) ? $value($source, $args, $context, $info) : $value;
+                    if (is_null($fieldName)) {
+                        throw new \Exception('Could not get $fieldName from ResolveInfo');
                     }
+
+                    if (is_null($info->parentType)) {
+                        throw new \Exception('Could not get $parentType from ResolveInfo');
+                    }
+
+                    $parentTypeName = $info->parentType->name;
+
+                    foreach($contexts as $c){
+                        $c->make($request, $graphqlContext);
+                    }
+
+                    if (isset($resolvers[$parentTypeName])) {
+                        $resolver = $resolvers[$parentTypeName];
+
+                        if (is_array($resolver)) {
+                            if (array_key_exists($fieldName, $resolver)) {
+                                $value = $resolver[$fieldName];
+
+                                $value->setSource($source);
+                                // $value->setArgs($args);
+                                $value->setContext($graphqlContext);
+                                $value->setInfo($info);
+
+                                $argsValues = array_values($args);
+                                $resolverValue = $value->$fieldName(...$argsValues);
+
+                                if($resolverValue instanceof AbstractViewModel){
+                                    return $resolverValue->toArray();
+                                }
+
+                                if($resolverValue instanceof AbstractCollection){
+                                    return $resolverValue->finalProcceed();
+                                }
+                            }
+                        }
+                    }
+
+                    return Executor::defaultFieldResolver($source, $args, $context, $info);
+                } catch (GraphQLException $e){
+                    \GraphQL\Error\FormattedError::setInternalErrorMessage($e->getMessage());
+                    throw $e;
                 }
-
-                // if (is_object($resolver)) {
-                //     if (isset($resolver->{$fieldName})) {
-                //         $value = $resolver->{$fieldName};
-
-                //         return is_callable($value) ? $value($source, $args, $context, $info) : $value;
-                //     }
-                // }
-            }
-
-            return Executor::defaultFieldResolver($source, $args, $context, $info);
-        });
+            });
     }
 }

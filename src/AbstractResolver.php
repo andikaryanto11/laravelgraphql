@@ -94,4 +94,22 @@ abstract class AbstractResolver
 
         return $this;
     }
+
+    /**
+     * Validate Token
+     *
+     * @throws GraphQLException
+     * @return void
+     */
+    public function validateToken(){
+
+        $context = $this->getContext();
+        if(is_null($context->userToken)){
+            throw new GraphQLException('You are not authorized');
+        }
+
+        if($context->userToken->isExpired()){
+            throw new GraphQLException('Token Expired');
+        }
+    }
 }

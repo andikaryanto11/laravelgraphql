@@ -46,7 +46,7 @@ class TypeBuilder
         if(empty($buildArgs))
             return '';
 
-        return '(' . implode($buildArgs) . ')';
+        return '(' . implode(', ', $buildArgs) . ')';
     }
 
     public function buildType($type){
