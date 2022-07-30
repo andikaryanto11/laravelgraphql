@@ -18,8 +18,6 @@ class GraphQL
     protected string $schema = '';
     protected array $queries = [];
     protected array $mutation = [];
-    // protected array $types = [];
-    // protected array $args = [];
 
     /**
      * @var Container
@@ -169,56 +167,56 @@ class GraphQL
 
         $graphqlContext = $this->graphqlContext;
 
-        Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info) 
-            use ($resolvers, $request, $contexts, $graphqlContext ) {
-                try{
-                     $fieldName = $info->fieldName;
+        Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info)
+        use ($resolvers, $request, $contexts, $graphqlContext) {
+            try {
+                $fieldName = $info->fieldName;
 
-                    if (is_null($fieldName)) {
-                        throw new \Exception('Could not get $fieldName from ResolveInfo');
-                    }
+                if (is_null($fieldName)) {
+                    throw new \Exception('Could not get $fieldName from ResolveInfo');
+                }
 
-                    if (is_null($info->parentType)) {
-                        throw new \Exception('Could not get $parentType from ResolveInfo');
-                    }
+                if (is_null($info->parentType)) {
+                    throw new \Exception('Could not get $parentType from ResolveInfo');
+                }
 
-                    $parentTypeName = $info->parentType->name;
+                $parentTypeName = $info->parentType->name;
 
-                    foreach($contexts as $c){
-                        $c->make($request, $graphqlContext);
-                    }
+                foreach ($contexts as $c) {
+                    $c->make($request, $graphqlContext);
+                }
 
-                    if (isset($resolvers[$parentTypeName])) {
-                        $resolver = $resolvers[$parentTypeName];
+                if (isset($resolvers[$parentTypeName])) {
+                    $resolver = $resolvers[$parentTypeName];
 
-                        if (is_array($resolver)) {
-                            if (array_key_exists($fieldName, $resolver)) {
-                                $value = $resolver[$fieldName];
+                    if (is_array($resolver)) {
+                        if (array_key_exists($fieldName, $resolver)) {
+                            $value = $resolver[$fieldName];
 
-                                $value->setSource($source);
-                                // $value->setArgs($args);
-                                $value->setContext($graphqlContext);
-                                $value->setInfo($info);
+                            $value->setSource($source);
+                            $value->setRequest($request);
+                            $value->setContext($graphqlContext);
+                            $value->setInfo($info);
 
-                                $argsValues = array_values($args);
-                                $resolverValue = $value->$fieldName(...$argsValues);
+                            $argsValues = array_values($args);
+                            $resolverValue = $value->$fieldName(...$argsValues);
 
-                                if($resolverValue instanceof AbstractViewModel){
-                                    return $resolverValue->toArray();
-                                }
-
-                                if($resolverValue instanceof AbstractCollection){
-                                    return $resolverValue->finalProcceed();
-                                }
+                            if ($resolverValue instanceof AbstractViewModel) {
+                                return $resolverValue->toArray();
+                            } elseif ($resolverValue instanceof AbstractCollection) {
+                                return $resolverValue->finalProcceed();
+                            } else {
+                                return null;
                             }
                         }
                     }
-
-                    return Executor::defaultFieldResolver($source, $args, $context, $info);
-                } catch (GraphQLException $e){
-                    \GraphQL\Error\FormattedError::setInternalErrorMessage($e->getMessage());
-                    throw $e;
                 }
-            });
+
+                return Executor::defaultFieldResolver($source, $args, $context, $info);
+            } catch (GraphQLException $e) {
+                \GraphQL\Error\FormattedError::setInternalErrorMessage($e->getMessage());
+                throw $e;
+            }
+        });
     }
 }

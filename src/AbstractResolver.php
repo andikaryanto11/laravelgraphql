@@ -3,12 +3,14 @@
 namespace LaravelGraphQL;
 
 use GraphQL\Type\Definition\ResolveInfo;
+use Illuminate\Http\Request;
 
 abstract class AbstractResolver
 {
 
     protected $source;
     protected array $args;
+    protected Request $request;
     protected Context $context;
     protected ResolveInfo $info;
 
@@ -111,5 +113,26 @@ abstract class AbstractResolver
         if($context->userToken->isExpired()){
             throw new GraphQLException('Token Expired');
         }
+    }
+
+    /**
+     * Get the value of request
+     */ 
+    public function getRequest() : Request
+    {
+        return $this->request;
+    }
+
+    /**
+     * Set the value of request
+     *
+     * @param Request $request
+     * @return  self
+     */ 
+    public function setRequest($request)
+    {
+        $this->request = $request;
+
+        return $this;
     }
 }
