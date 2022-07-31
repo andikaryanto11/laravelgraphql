@@ -66,36 +66,29 @@ class GraphQL
      */
     private function extractResolvers()
     {
-        $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
 
         $resolvers = app('config')->get('graphql')['resolvers'];
-        foreach ($resolvers as $resolver) {
-            $this->app->make($resolver);
-        }
 
         foreach ($resolvers as $resolver) {
+            $this->app->make($resolver);
             $reflector = (new ReflectionClass($resolver));
             $reflectorFunctions = $reflector->getMethods(ReflectionMethod::IS_FINAL);
             foreach ($reflectorFunctions as $reflectorFunction) {
                 if ($reflectorFunction->name != '__construct') {
 
                     $doc = $reflectorFunction->getDocComment();
-                    preg_match_all($pattern, $doc, $matches, PREG_PATTERN_ORDER);
+                    $resolverType = '';
+                    $docs = $this->typeBuilder->buildResolverParamsFromAnnotation($reflectorFunction->name, $doc, $resolverType);
 
-                    if (!empty($matches)) {
-                        if (count($matches) > 0 && isset($matches[0][0])) {
-                            $arg = $this->typeBuilder->buildArgument($matches[0][1]);
-                            $type = $this->typeBuilder->buildType($matches[0][2]);
-                            $desc = $this->typeBuilder->buildDescription($matches[0][3]);
-                            if (strpos($matches[0][0], '@query') !== false) {
-                                $this->queries[$reflectorFunction->name] = $this->app->get($resolver);
-                                $this->typeBuilder->addQuery($reflectorFunction->name, $arg, $type, $desc);
-                            }
+                    if (!empty($docs)) {
+                        if($resolverType == 'query'){
+                            $this->queries[$reflectorFunction->name] = $this->app->get($resolver);
+                            $this->typeBuilder->addQuery($reflectorFunction->name, $docs['args'], $docs['type'], $docs['desc']);
+                        }
 
-                            if (strpos($matches[0][0], '@mutation') !== false) {
-                                $this->mutation[$reflectorFunction->name] = $this->app->get($resolver);
-                                $this->typeBuilder->addMutation($reflectorFunction->name, $arg, $type, $desc);
-                            }
+                        if($resolverType == 'mutation'){
+                            $this->mutation[$reflectorFunction->name] = $this->app->get($resolver);
+                            $this->typeBuilder->addMutation($reflectorFunction->name, $docs['args'], $docs['type'], $docs['desc']);
                         }
                     }
                 }
@@ -165,17 +158,22 @@ class GraphQL
      */
     public function buildResolvers(Request $request)
     {
-        $resolvers = $this->getResolvers();
+        try {
+            $resolvers = $this->getResolvers();
+        } catch (GraphQLException $e) {
+            \GraphQL\Error\FormattedError::setInternalErrorMessage($e->getMessage());
+            throw $e;
+        }
 
         $contexts = [
             $this->contextToken
         ];
 
         $graphqlContext = $this->graphqlContext;
-
         Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info)
         use ($resolvers, $request, $contexts, $graphqlContext) {
             try {
+
                 $fieldName = $info->fieldName;
 
                 if (is_null($fieldName)) {

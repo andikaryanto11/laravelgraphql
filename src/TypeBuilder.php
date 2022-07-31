@@ -2,6 +2,7 @@
 
 namespace LaravelGraphQL;
 
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use phpDocumentor\Reflection\Types\Boolean;
 
@@ -38,9 +39,9 @@ class TypeBuilder
      * @param string $arg
      * @return string
      */
-    public function buildArgument(string $arg): string
+    private function buildArgument(string $arg): string
     {
-        $args = explode(',', str_replace(['@args', '*'], ['', ''], $arg));
+        $args = explode(',', str_replace(['#args', '*'], ['', ''], $arg));
         if (empty($args))
             return '';
 
@@ -64,9 +65,9 @@ class TypeBuilder
      * @param string $type
      * @return string
      */
-    public function buildType(string $type): string
+    private function buildType(string $type): string
     {
-        $type = str_replace(['@type', '*'], ['', ''], $type);
+        $type = str_replace(['#type', '*'], ['', ''], $type);
         return trim($type);
     }
 
@@ -76,9 +77,9 @@ class TypeBuilder
      * @param string $description
      * @return string
      */
-    public function buildDescription(string $description): string
+    private function buildDescription(string $description): string
     {
-        $desc = str_replace(['@desc', '*'], ['', ''], $description);
+        $desc = str_replace(['#desc', '*'], ['', ''], $description);
         return trim($desc);
     }
 
@@ -98,6 +99,52 @@ class TypeBuilder
 
         return $type;
     }
+
+
+    /**
+     *
+     * @param array $docs
+     * @param string $resolverType
+     * @return array
+     */
+    public function buildResolverParamsFromAnnotation(string $resolverName, string $doc, string &$resolverType): array
+    {
+
+        $resolverArgs = [];
+        $pattern = "(#[a-zA-Z]+\ *[a-zA-Z0-9, ()_].*)";
+        
+        $hasQuery = false;
+        $hasMutation = false;
+        $hasType = false;
+        $isResolverValid = true;
+        preg_match_all($pattern, $doc, $matches, PREG_PATTERN_ORDER);
+        if (!empty($matches)) {
+            foreach ($matches[0] as $annotation) {
+                if (strpos($annotation, '#args') !== false) {
+                    $resolverArgs['args'] = $this->buildArgument($annotation);
+                } elseif (strpos($annotation, '#type') !== false) {
+                    $hasType = true;
+                    $resolverArgs['type'] = $this->buildType($annotation);
+                } elseif (strpos($annotation, '#desc') !== false) {
+                    $resolverArgs['desc'] = $this->buildDescription($annotation);
+                } elseif (strpos($annotation, '#query') !== false) {
+                    $hasQuery = true;
+                    $resolverType = 'query';
+                } elseif (strpos($annotation, '#mutation') !== false) {
+                    $hasMutation = true;
+                    $resolverType = 'mutation';
+                }
+            }
+            $isResolverValid = $hasType && ($hasMutation || $hasQuery);
+
+            if(!$isResolverValid){
+                throw new GraphQLException($resolverName . ' needs mandatory annotation #query, #mutation, #type');
+            }
+        }
+
+        return $resolverArgs;
+    }
+
 
     /**
      * Build query type

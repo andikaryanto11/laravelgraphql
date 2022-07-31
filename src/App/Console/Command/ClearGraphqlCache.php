@@ -40,9 +40,7 @@ class ClearGraphqlCache extends Command
     public function handle()
     {
         $this->info('Clearing graphql cache');
-        $this->info(Cache::has(GraphQL::CACHE_SCHEMAS));
         Cache::forget(GraphQL::CACHE_SCHEMAS);
-        $this->info(Cache::get(GraphQL::CACHE_SCHEMAS));
         $this->info('The command was successful!');
     }
 }
