@@ -206,7 +206,7 @@ class GraphQL
                             $resolverValue = $value->$fieldName(...$argsValues);
 
                             if ($resolverValue instanceof AbstractViewModel) {
-                                return $resolverValue->toArray();
+                                return $resolverValue->finalArray();
                             } elseif ($resolverValue instanceof AbstractCollection) {
                                 return $resolverValue->finalProcceed();
                             } else {
