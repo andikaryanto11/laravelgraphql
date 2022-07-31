@@ -2,6 +2,8 @@
 
 namespace LaravelGraphQL;
 
+use Illuminate\Support\Facades\Cache;
+use phpDocumentor\Reflection\Types\Boolean;
 
 class TypeBuilder
 {
@@ -14,9 +16,9 @@ class TypeBuilder
      * @param string $query
      * @return void
      */
-    public function addQuery(string $name, string $arg, string $type, $description)
+    public function addQuery(string $name, string $arg, string $type, $description): void
     {
-        $this->queries .= '"""' . $description . '"""'. " \n $name $arg: $type \n";
+        $this->queries .= '"""' . $description . '"""' . " \n $name $arg: $type \n";
     }
 
     /**
@@ -25,36 +27,57 @@ class TypeBuilder
      * @param string $mutation
      * @return void
      */
-    public function addMutation(string $name, string $arg, string $type, $description)
+    public function addMutation(string $name, string $arg, string $type, $description): void
     {
-        $this->mutations .= '"""' . $description . '"""'. " \n $name $arg: $type \n";
+        $this->mutations .= '"""' . $description . '"""' . " \n $name $arg: $type \n";
     }
 
-    public function buildArgument(string $arg){
+    /**
+     * build args of query / muatation
+     *
+     * @param string $arg
+     * @return string
+     */
+    public function buildArgument(string $arg): string
+    {
         $args = explode(',', str_replace(['@args', '*'], ['', ''], $arg));
-        if(empty($args))
+        if (empty($args))
             return '';
 
         $buildArgs = [];
-        foreach($args as $a){
+        foreach ($args as $a) {
             $arrArgs = explode(' ', trim($a));
-            if(empty($arrArgs) || count($arrArgs) != 2)
+            if (empty($arrArgs) || count($arrArgs) != 2)
                 continue;
 
             $buildArgs[] = $arrArgs[1] . ': ' . $arrArgs[0];
         }
-        if(empty($buildArgs))
+        if (empty($buildArgs))
             return '';
 
         return '(' . implode(', ', $buildArgs) . ')';
     }
 
-    public function buildType($type){
+    /**
+     * Build type of query / mutation
+     *
+     * @param string $type
+     * @return string
+     */
+    public function buildType(string $type): string
+    {
         $type = str_replace(['@type', '*'], ['', ''], $type);
         return trim($type);
     }
 
-    public function buildDescription($description){
+    /**
+     * Description of query / mutation
+     *
+     * @param string $description
+     * @return string
+     */
+    public function buildDescription(string $description): string
+    {
         $desc = str_replace(['@desc', '*'], ['', ''], $description);
         return trim($desc);
     }
@@ -64,7 +87,7 @@ class TypeBuilder
      *
      * @return void
      */
-    public function build()
+    public function build(): string
     {
         $type = '';
         if (!empty($this->queries))
@@ -82,9 +105,9 @@ class TypeBuilder
      * @param string $strQueries
      * @return string
      */
-    private function buildQuery(string $strQueries)
+    private function buildQuery(string $strQueries): string
     {
-        return "type Query {\n" . 
+        return "type Query {\n" .
             $strQueries . "\n" .
             '}';
     }
@@ -95,7 +118,7 @@ class TypeBuilder
      * @param string $strMutations
      * @return string
      */
-    private function buildMutation(string $strMutations)
+    private function buildMutation(string $strMutations): string
     {
         return "type Mutation {\n" .
             $strMutations . "\n" .

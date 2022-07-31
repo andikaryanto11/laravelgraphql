@@ -3,6 +3,7 @@
 namespace LaravelGraphQL\App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use LaravelGraphQL\App\Console\Commands\ClearGraphqlCache;
 
 class GraphQLProvider extends ServiceProvider
 {
@@ -30,6 +31,12 @@ class GraphQLProvider extends ServiceProvider
        
         $this->loadRoutesFrom(__DIR__ . '/../../Routes/graphql.php');
         $this->publishConfig();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ClearGraphqlCache::class,
+            ]);
+        }
        
     }
 

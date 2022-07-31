@@ -6,6 +6,7 @@ use GraphQL\Executor\Executor;
 use GraphQL\Type\Definition\ResolveInfo;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use LaravelCommon\ViewModels\AbstractCollection;
 use LaravelCommon\ViewModels\AbstractViewModel;
 use LaravelGraphQL\Contexts\Token;
@@ -15,6 +16,8 @@ use ReflectionMethod;
 class GraphQL
 {
 
+    public const CACHE_RESOLVERS = 'laravelgraphql_resolvers';
+    public const CACHE_SCHEMAS = 'laravelgraphql_schemas';
     protected string $schema = '';
     protected array $queries = [];
     protected array $mutation = [];
@@ -103,11 +106,14 @@ class GraphQL
 
     public function getResolvers()
     {
-        $this->extractResolvers();
-        return [
-            'Query' => $this->queries,
-            'Mutation' => $this->mutation
-        ];
+        // return Cache::remember(self::CACHE_RESOLVERS, 10, function(){
+            $this->extractResolvers();
+            return [
+                'Query' => $this->queries,
+                'Mutation' => $this->mutation
+            ];
+        // });
+       
     }
 
     /**
@@ -117,9 +123,13 @@ class GraphQL
      */
     public function buildSchema()
     {
-        $this->buildDefaultSchema();
-        $this->buildUserDefineSchema();
-        return \GraphQL\Utils\BuildSchema::build($this->schema);
+        $schema = Cache::rememberForever(self::CACHE_SCHEMAS, function(){
+            $this->buildDefaultSchema();
+            $this->buildUserDefineSchema();
+            return $this->schema;
+        });
+
+        return \GraphQL\Utils\BuildSchema::build($schema);
     }
 
     /**
