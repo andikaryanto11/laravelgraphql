@@ -59,12 +59,11 @@ class GraphQL
         $this->contextToken = $contextToken;
     }
 
-    public function buildResolvers(Request $request)
-    {
-
-        $this->setResolvers($request);
-    }
-
+    /**
+     * Extract all resolver function from all classes registered
+     *
+     * @return void
+     */
     private function extractResolvers()
     {
         $pattern = "#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#";
@@ -106,14 +105,11 @@ class GraphQL
 
     public function getResolvers()
     {
-        // return Cache::remember(self::CACHE_RESOLVERS, 10, function(){
-            $this->extractResolvers();
-            return [
-                'Query' => $this->queries,
-                'Mutation' => $this->mutation
-            ];
-        // });
-       
+        $this->extractResolvers();
+        return [
+            'Query' => $this->queries,
+            'Mutation' => $this->mutation
+        ];
     }
 
     /**
@@ -163,11 +159,11 @@ class GraphQL
     }
 
     /**
-     * Set Resolver
+     * Build Resolver
      *
      * @return void
      */
-    private function setResolvers(Request $request)
+    public function buildResolvers(Request $request)
     {
         $resolvers = $this->getResolvers();
 
