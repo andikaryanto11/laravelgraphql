@@ -14,8 +14,7 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "webonyx/graphql-php": "dev-master",
-        "andikaryanto11/laravelcommon": "dev-mapping_entity"
+        "webonyx/graphql-php": "dev-master"
     },
     "extra": {
         "laravel": {
