@@ -2,6 +2,7 @@
 
 namespace LaravelGraphQL;
 
+use Exception;
 use GraphQL\Executor\Executor;
 use GraphQL\Type\Definition\ResolveInfo;
 use Illuminate\Contracts\Container\Container;
@@ -70,7 +71,7 @@ class GraphQL
         $resolvers = app('config')->get('graphql')['resolvers'];
 
         foreach ($resolvers as $resolver) {
-            $this->app->make($resolver);
+            $resolverInstance = $this->app->make($resolver);
             $reflector = (new ReflectionClass($resolver));
             $reflectorFunctions = $reflector->getMethods(ReflectionMethod::IS_FINAL);
             foreach ($reflectorFunctions as $reflectorFunction) {
@@ -82,12 +83,12 @@ class GraphQL
 
                     if (!empty($docs)) {
                         if($resolverType == 'query'){
-                            $this->queries[$reflectorFunction->name] = $this->app->get($resolver);
+                            $this->queries[$reflectorFunction->name] = $this->createResolver($resolverInstance, $docs['middlewares']);
                             $this->typeBuilder->addQuery($reflectorFunction->name, $docs['args'], $docs['type'], $docs['desc']);
                         }
 
                         if($resolverType == 'mutation'){
-                            $this->mutation[$reflectorFunction->name] = $this->app->get($resolver);
+                            $this->queries[$reflectorFunction->name] = $this->createResolver($resolverInstance, $docs['middlewares']);
                             $this->typeBuilder->addMutation($reflectorFunction->name, $docs['args'], $docs['type'], $docs['desc']);
                         }
                     }
@@ -96,6 +97,38 @@ class GraphQL
         }
     }
 
+    /**
+     * Create resolver and its middleware
+     *
+     * @param mixed $resolver
+     * @param array $middlewares
+     * @return void
+     */
+    private function createResolver($resolver, $middlewares = []) {
+
+        $instanceMiddlwares = [];
+        foreach($middlewares as $middleware) {
+            $graphQlMiddleware = new GraphQLMiddleware();
+            $middlewareParts = explode(':', $middleware);
+            if(count($middlewareParts) == 2) {
+                $scopes = explode(',', $middlewareParts[1]);
+                $graphQlMiddleware->setScope($scopes);
+            }
+            $graphQlMiddleware->setMiddleware($this->app->make($middlewareParts[0]));
+            $instanceMiddlwares[] = $graphQlMiddleware;
+        }
+
+        return [
+            'resolver' => $resolver,
+            'middlewares' => $instanceMiddlwares
+        ];
+    }
+
+    /**
+     * get All Resolvers
+     *
+     * @return void
+     */
     public function getResolvers()
     {
         $this->extractResolvers();
@@ -172,6 +205,7 @@ class GraphQL
         $graphqlContext = $this->graphqlContext;
         Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info)
         use ($resolvers, $request, $contexts, $graphqlContext) {
+            
             try {
 
                 $fieldName = $info->fieldName;
@@ -195,15 +229,32 @@ class GraphQL
 
                     if (is_array($resolver)) {
                         if (array_key_exists($fieldName, $resolver)) {
-                            $value = $resolver[$fieldName];
+                            
 
-                            $value->setSource($source);
-                            $value->setRequest($request);
-                            $value->setContext($graphqlContext);
-                            $value->setInfo($info);
+                            $resolverInstance = $resolver[$fieldName]['resolver'];
+                            $resolverMiddlewares = $resolver[$fieldName]['middlewares'];
+
+                            foreach($resolverMiddlewares as $middleware) {
+                                try{
+                                    $result = $middleware->getMiddleware()->handle($request, function($request) {
+                                        return null;
+                                    }, $middleware->getScope());
+
+                                    if(!is_null($result)) {
+                                        throw new GraphQLException($result->getMessage());
+                                    }
+                                }catch(Exception $e) {
+                                    throw new GraphQLException($e->getMessage());
+                                }
+                            }
+
+                            $resolverInstance->setSource($source);
+                            $resolverInstance->setRequest($request);
+                            $resolverInstance->setContext($graphqlContext);
+                            $resolverInstance->setInfo($info);
 
                             $argsValues = array_values($args);
-                            $resolverValue = $value->$fieldName(...$argsValues);
+                            $resolverValue = $resolverInstance->$fieldName(...$argsValues);
 
                             if ($resolverValue instanceof AbstractViewModel) {
                                 return $resolverValue->finalArray();

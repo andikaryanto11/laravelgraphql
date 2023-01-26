@@ -28,7 +28,7 @@ class GraphQLController extends Controller
 
     /**
      * /graphql
-     *
+     * 
      * @return void
      */
     public function index(Request $request)
@@ -55,7 +55,7 @@ class GraphQLController extends Controller
             ];
         }
         
-        header('Content-Type: application/json');
-        echo json_encode($output);
+        return response($output, 200)
+                  ->header('Content-Type', 'application/json');
     }
 }

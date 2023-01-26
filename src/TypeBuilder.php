@@ -8,6 +8,7 @@ use phpDocumentor\Reflection\Types\Boolean;
 
 class TypeBuilder
 {
+    private const ANOTATION_EXTRACTOR_REGEX = '(#[a-zA-Z]+\ *[a-zA-Z0-9, ()_].*)';
     protected string $queries = '';
     protected string $mutations = '';
 
@@ -111,15 +112,15 @@ class TypeBuilder
     {
 
         $resolverArgs = [];
-        $pattern = "(#[a-zA-Z]+\ *[a-zA-Z0-9, ()_].*)";
         
         $hasQuery = false;
         $hasMutation = false;
         $hasType = false;
         $isResolverValid = true;
-        preg_match_all($pattern, $doc, $matches, PREG_PATTERN_ORDER);
+        preg_match_all(TypeBuilder::ANOTATION_EXTRACTOR_REGEX, $doc, $matches, PREG_PATTERN_ORDER);
         if (!empty($matches)) {
             foreach ($matches[0] as $annotation) {
+                $resolverArgs['middlewares'] = [];
                 if (strpos($annotation, '#args') !== false) {
                     $resolverArgs['args'] = $this->buildArgument($annotation);
                 } elseif (strpos($annotation, '#type') !== false) {
@@ -133,6 +134,8 @@ class TypeBuilder
                 } elseif (strpos($annotation, '#mutation') !== false) {
                     $hasMutation = true;
                     $resolverType = 'mutation';
+                } elseif (strpos($annotation, '#middleware') !== false) {
+                    $resolverArgs['middlewares'] =  explode(';', str_replace(['#middleware ', '[', ']'], ['', '', ''], $annotation));
                 }
             }
             $isResolverValid = $hasType && ($hasMutation || $hasQuery);
