@@ -6,6 +6,8 @@ use Exception;
 use Illuminate\Support\Facades\Cache;
 use phpDocumentor\Reflection\Types\Boolean;
 
+use function PHPSTORM_META\type;
+
 class TypeBuilder
 {
     private const ANOTATION_EXTRACTOR_REGEX = '(#[a-zA-Z]+\ *[a-zA-Z0-9, ()_].*)';
@@ -40,24 +42,12 @@ class TypeBuilder
      * @param string $arg
      * @return string
      */
-    private function buildArgument(string $arg): string
+    public function buildArgument(array $args): string
     {
-        $args = explode(',', str_replace(['#args', '*'], ['', ''], $arg));
         if (empty($args))
             return '';
 
-        $buildArgs = [];
-        foreach ($args as $a) {
-            $arrArgs = explode(' ', trim($a));
-            if (empty($arrArgs) || count($arrArgs) != 2)
-                continue;
-
-            $buildArgs[] = $arrArgs[1] . ': ' . $arrArgs[0];
-        }
-        if (empty($buildArgs))
-            return '';
-
-        return '(' . implode(', ', $buildArgs) . ')';
+        return '(' . implode(', ', $args) . ')';
     }
 
     /**
@@ -66,22 +56,13 @@ class TypeBuilder
      * @param string $type
      * @return string
      */
-    private function buildType(string $type): string
+    public function buildType(mixed $type): string
     {
-        $type = str_replace(['#type', '*'], ['', ''], $type);
-        return trim($type);
-    }
+        if (is_array($type)) {
+            return '[' . $type[0] . ']';
+        }
 
-    /**
-     * Description of query / mutation
-     *
-     * @param string $description
-     * @return string
-     */
-    private function buildDescription(string $description): string
-    {
-        $desc = str_replace(['#desc', '*'], ['', ''], $description);
-        return trim($desc);
+        return $type;
     }
 
     /**
@@ -100,54 +81,6 @@ class TypeBuilder
 
         return $type;
     }
-
-
-    /**
-     *
-     * @param array $docs
-     * @param string $resolverType
-     * @return array
-     */
-    public function buildResolverParamsFromAnnotation(string $resolverName, string $doc, string &$resolverType): array
-    {
-
-        $resolverArgs = [];
-        
-        $hasQuery = false;
-        $hasMutation = false;
-        $hasType = false;
-        $isResolverValid = true;
-        preg_match_all(TypeBuilder::ANOTATION_EXTRACTOR_REGEX, $doc, $matches, PREG_PATTERN_ORDER);
-        if (!empty($matches)) {
-            foreach ($matches[0] as $annotation) {
-                $resolverArgs['middlewares'] = [];
-                if (strpos($annotation, '#args') !== false) {
-                    $resolverArgs['args'] = $this->buildArgument($annotation);
-                } elseif (strpos($annotation, '#type') !== false) {
-                    $hasType = true;
-                    $resolverArgs['type'] = $this->buildType($annotation);
-                } elseif (strpos($annotation, '#desc') !== false) {
-                    $resolverArgs['desc'] = $this->buildDescription($annotation);
-                } elseif (strpos($annotation, '#query') !== false) {
-                    $hasQuery = true;
-                    $resolverType = 'query';
-                } elseif (strpos($annotation, '#mutation') !== false) {
-                    $hasMutation = true;
-                    $resolverType = 'mutation';
-                } elseif (strpos($annotation, '#middleware') !== false) {
-                    $resolverArgs['middlewares'] =  explode(';', str_replace(['#middleware ', '[', ']'], ['', '', ''], $annotation));
-                }
-            }
-            $isResolverValid = $hasType && ($hasMutation || $hasQuery);
-
-            if(!$isResolverValid){
-                throw new GraphQLException($resolverName . ' needs mandatory annotation #query, #mutation, #type');
-            }
-        }
-
-        return $resolverArgs;
-    }
-
 
     /**
      * Build query type

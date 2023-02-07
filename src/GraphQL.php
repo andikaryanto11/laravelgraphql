@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use LaravelCommon\ViewModels\AbstractCollection;
 use LaravelCommon\ViewModels\AbstractViewModel;
+use LaravelGraphQL\Attributes\Argument;
+use LaravelGraphQL\Attributes\Description;
+use LaravelGraphQL\Attributes\Middleware;
+use LaravelGraphQL\Attributes\Resolver;
+use LaravelGraphQL\Attributes\Type;
 use LaravelGraphQL\Contexts\Token;
 use ReflectionClass;
 use ReflectionMethod;
@@ -77,19 +82,45 @@ class GraphQL
             foreach ($reflectorFunctions as $reflectorFunction) {
                 if ($reflectorFunction->name != '__construct') {
 
-                    $doc = $reflectorFunction->getDocComment();
-                    $resolverType = '';
-                    $docs = $this->typeBuilder->buildResolverParamsFromAnnotation($reflectorFunction->name, $doc, $resolverType);
-
-                    if (!empty($docs)) {
-                        if($resolverType == 'query'){
-                            $this->queries[$reflectorFunction->name] = $this->createResolver($resolverInstance, $docs['middlewares']);
-                            $this->typeBuilder->addQuery($reflectorFunction->name, $docs['args'], $docs['type'], $docs['desc']);
+                    $attrs = $reflectorFunction->getAttributes();
+                    $resolver = '';
+                    $description = '';
+                    $args = '';
+                    $type = '';
+                    $middlewares = [];
+                    foreach ($attrs as $attr) {
+                        $attributeArgument = $attr->getArguments();
+                        $attributeName = $attr->getName();
+                        if ($attributeName == Argument::class) {
+                            $args =  $this->typeBuilder->buildArgument($attributeArgument[0]);
                         }
 
-                        if($resolverType == 'mutation'){
-                            $this->queries[$reflectorFunction->name] = $this->createResolver($resolverInstance, $docs['middlewares']);
-                            $this->typeBuilder->addMutation($reflectorFunction->name, $docs['args'], $docs['type'], $docs['desc']);
+                        if ($attributeName == Description::class) {
+                            $description =  $attributeArgument[0];
+                        }
+
+                        if ($attributeName == Type::class) {
+                            $type =   $this->typeBuilder->buildType($attributeArgument[0]);
+                        }
+
+                        if ($attributeName == Resolver::class) {
+                            $resolver =  $attributeArgument[0];
+                        }
+
+                        if ($attributeName == Middleware::class) {
+                            $middlewares =  $attributeArgument[0];
+                        }
+                    }
+
+                    if (!empty($attrs)) {
+                        if ($resolver == Resolver::QUERY) {
+                            $this->queries[$reflectorFunction->name] = $this->createResolver($resolverInstance,  $middlewares);
+                            $this->typeBuilder->addQuery($reflectorFunction->name,  $args,  $type, $description);
+                        }
+
+                        if ($resolver == Resolver::MUTATION) {
+                            $this->mutation[$reflectorFunction->name] = $this->createResolver($resolverInstance,  $middlewares);
+                            $this->typeBuilder->addMutation($reflectorFunction->name,  $args,  $type, $description);
                         }
                     }
                 }
@@ -104,13 +135,14 @@ class GraphQL
      * @param array $middlewares
      * @return void
      */
-    private function createResolver($resolver, $middlewares = []) {
+    private function createResolver($resolver, $middlewares = [])
+    {
 
         $instanceMiddlwares = [];
-        foreach($middlewares as $middleware) {
+        foreach ($middlewares as $middleware) {
             $graphQlMiddleware = new GraphQLMiddleware();
             $middlewareParts = explode(':', $middleware);
-            if(count($middlewareParts) == 2) {
+            if (count($middlewareParts) == 2) {
                 $scopes = explode(',', $middlewareParts[1]);
                 $graphQlMiddleware->setScope($scopes);
             }
@@ -145,7 +177,7 @@ class GraphQL
      */
     public function buildSchema()
     {
-        $schema = Cache::rememberForever(self::CACHE_SCHEMAS, function(){
+        $schema = Cache::rememberForever(self::CACHE_SCHEMAS, function () {
             $this->buildDefaultSchema();
             $this->buildUserDefineSchema();
             return $this->schema;
@@ -205,7 +237,7 @@ class GraphQL
         $graphqlContext = $this->graphqlContext;
         Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info)
         use ($resolvers, $request, $contexts, $graphqlContext) {
-            
+
             try {
 
                 $fieldName = $info->fieldName;
@@ -229,21 +261,21 @@ class GraphQL
 
                     if (is_array($resolver)) {
                         if (array_key_exists($fieldName, $resolver)) {
-                            
+
 
                             $resolverInstance = $resolver[$fieldName]['resolver'];
                             $resolverMiddlewares = $resolver[$fieldName]['middlewares'];
 
-                            foreach($resolverMiddlewares as $middleware) {
-                                try{
-                                    $result = $middleware->getMiddleware()->handle($request, function($request) {
+                            foreach ($resolverMiddlewares as $middleware) {
+                                try {
+                                    $result = $middleware->getMiddleware()->handle($request, function ($request) {
                                         return null;
                                     }, $middleware->getScope());
 
-                                    if(!is_null($result)) {
+                                    if (!is_null($result)) {
                                         throw new GraphQLException($result->getMessage());
                                     }
-                                }catch(Exception $e) {
+                                } catch (Exception $e) {
                                     throw new GraphQLException($e->getMessage());
                                 }
                             }
