@@ -3,7 +3,7 @@
 namespace LaravelGraphQL\App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use LaravelGraphQL\App\Console\Commands\ClearGraphqlCache;
+use LaravelGraphQL\App\Console\Commands\ClearGraphqlSchemaCache;
 
 class GraphQLProvider extends ServiceProvider
 {
@@ -34,7 +34,7 @@ class GraphQLProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                ClearGraphqlCache::class,
+                ClearGraphqlSchemaCache::class,
             ]);
         }
        

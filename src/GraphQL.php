@@ -43,10 +43,6 @@ class GraphQL
      */
     protected Context $graphqlContext;
 
-    /**
-     * @var Token
-     */
-    protected Token $contextToken;
 
     /**
      * Undocumented function
@@ -56,13 +52,11 @@ class GraphQL
     public function __construct(
         Container $app,
         TypeBuilder $typeBuilder,
-        Context $graphqlContext,
-        Token $contextToken
+        Context $graphqlContext
     ) {
         $this->app = $app;
         $this->typeBuilder = $typeBuilder;
         $this->graphqlContext = $graphqlContext;
-        $this->contextToken = $contextToken;
     }
 
     /**
@@ -231,7 +225,7 @@ class GraphQL
         }
 
         $contexts = [
-            $this->contextToken
+            
         ];
 
         $graphqlContext = $this->graphqlContext;
@@ -251,10 +245,6 @@ class GraphQL
                 }
 
                 $parentTypeName = $info->parentType->name;
-
-                foreach ($contexts as $c) {
-                    $c->make($request, $graphqlContext);
-                }
 
                 if (isset($resolvers[$parentTypeName])) {
                     $resolver = $resolvers[$parentTypeName];

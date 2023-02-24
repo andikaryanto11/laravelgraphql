@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use LaravelGraphQL\GraphQL;use Illuminate\Support\Str;
 
-class ClearGraphqlCache extends Command
+class ClearGraphqlSchemaCache extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'graphql:clear-cache';
+    protected $signature = 'graphql:clear-graphql-schema-cache';
 
     /**
      * The console command description.
@@ -40,7 +40,8 @@ class ClearGraphqlCache extends Command
     public function handle()
     {
         $this->info('Clearing graphql cache');
-        Cache::forget(GraphQL::CACHE_SCHEMAS);
+        Cache::pull(GraphQL::CACHE_SCHEMAS);
+        // Cache::flush();
         $this->info('The command was successful!');
     }
 }
