@@ -1,4 +1,9 @@
-schema {
-  query: Query
-  mutation: Mutation
+input OrderInput {
+    field: String!
+    direction: String!
+}
+
+input PaginationInput {
+    page: Int!
+    size: Int!
 }

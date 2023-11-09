@@ -188,6 +188,7 @@ class GraphQL
     private function buildDefaultSchema(): void
     {
         $this->schema .= $this->typeBuilder->build();
+        $this->schema .= "\n" . file_get_contents(__DIR__ . '/schema.graphqls');
     }
 
     /**
