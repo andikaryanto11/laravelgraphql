@@ -4,5 +4,5 @@
 
 return [
     'Query' => [],
-    'Mutatton'=> []
+    'Mutation'=> []
 ];
