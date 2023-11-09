@@ -3,6 +3,8 @@
 //mapping yaml orm path
 
 return [
-    'Query' => [],
-    'Mutation'=> []
+    'resolvers' => [
+       // Namespace\Of\Your\Resolvee\Classes::class
+    ],
+    'schema_path' => app_path() . 'your\schema\path',
 ];
