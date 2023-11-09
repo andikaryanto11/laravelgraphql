@@ -4,7 +4,7 @@
 
 return [
     'resolvers' => [
-       // Namespace\Of\Your\Resolvee\Classes::class
+       // Namespace\Of\Your\Resolver\Classes::class
     ],
     'schema_path' => app_path() . 'your\schema\path',
 ];
