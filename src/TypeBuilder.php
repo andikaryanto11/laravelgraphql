@@ -4,6 +4,7 @@ namespace LaravelGraphQL;
 
 use Exception;
 use Illuminate\Support\Facades\Cache;
+use LaravelGraphQL\Types\GraphQLCollection;
 use phpDocumentor\Reflection\Types\Boolean;
 
 use function PHPSTORM_META\type;
@@ -13,6 +14,7 @@ class TypeBuilder
     private const ANOTATION_EXTRACTOR_REGEX = '(#[a-zA-Z]+\ *[a-zA-Z0-9, ()_].*)';
     protected string $queries = '';
     protected string $mutations = '';
+    protected array $collectionTypes = [];
 
     /**
      * Add string query
@@ -59,7 +61,8 @@ class TypeBuilder
     public function buildType(mixed $type): string
     {
         if (is_array($type)) {
-            return '[' . $type[0] . ']';
+            $this->collectionTypes[] = GraphQLCollection::of($type[0]);
+            return 'GraphQLCollection' . $type[0];
         }
 
         return $type;
@@ -79,6 +82,10 @@ class TypeBuilder
         if (!empty($this->mutations))
             $type .= "\n\n" . $this->buildMutation($this->mutations);
 
+        foreach($this->collectionTypes as $collectionType) {
+            $type .= $collectionType;
+        }
+    
         return $type;
     }
 

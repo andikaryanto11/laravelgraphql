@@ -15,6 +15,7 @@ use LaravelGraphQL\Attributes\Middleware;
 use LaravelGraphQL\Attributes\Resolver;
 use LaravelGraphQL\Attributes\Type;
 use LaravelGraphQL\Inputs\AbstractInput;
+use LaravelGraphQL\Types\GraphQLCollection;
 use ReflectionClass;
 use ReflectionMethod;
 
@@ -110,7 +111,7 @@ class GraphQL
                         }
 
                         if ($attributeName == Type::class) {
-                            $type =   $this->typeBuilder->buildType($attributeArgument[0]);
+                            $type = $this->typeBuilder->buildType($attributeArgument[0]);
                         }
 
                         if ($attributeName == Resolver::class) {
@@ -328,7 +329,7 @@ class GraphQL
                             if ($resolverValue instanceof AbstractViewModel) {
                                 return $resolverValue->finalArray();
                             } elseif ($resolverValue instanceof PaggedCollection) {
-                                return $resolverValue->finalProcceed();
+                                return (new GraphQLCollection())->buildList($resolverValue);
                             } else {
                                 return null;
                             }
