@@ -317,7 +317,6 @@ class GraphQL
                                 $resolverArgument = $resolverArguments[$index];
                                 if($resolverArgument instanceof AbstractInput) {
                                     $parameterArguments[] = $resolverArgument->parseFromArray($argsValue);
-                                    echo gettype($argsValues);
                                 } else {
                                     $parameterArguments[] = $argsValue;
                                 }
