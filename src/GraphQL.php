@@ -65,17 +65,6 @@ class GraphQL
         $this->graphqlContext = $graphqlContext;
     }
 
-    private function getPrimitiveTypeGraphQL(string $type): string|null
-    {
-        foreach ($this->mappedPrimitiveType as $graphq1Type => $primitiveType) {
-            if ($type == $primitiveType) {
-                return $graphq1Type;
-            }
-        }
-
-        return null;
-    }
-
     /**
      * Extract all resolver function from all classes registered
      *
