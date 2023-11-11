@@ -4,6 +4,7 @@ namespace LaravelGraphQL;
 
 use Exception;
 use Illuminate\Support\Facades\Cache;
+use LaravelGraphQL\Inputs\AbstractInput;
 use LaravelGraphQL\Types\GraphQLCollection;
 use phpDocumentor\Reflection\Types\Boolean;
 
@@ -15,6 +16,7 @@ class TypeBuilder
     protected string $queries = '';
     protected string $mutations = '';
     protected array $collectionTypes = [];
+    protected array $inputClasses = [];
 
     /**
      * Add string query
@@ -68,6 +70,20 @@ class TypeBuilder
         return $type;
     }
 
+    public function addInputClasses($class)
+    {
+        $isAdded = false;
+        foreach ($this->inputClasses as $inputClass) {
+            if (get_class($inputClass) == get_class($class)) {
+                $isAdded = true;
+            }
+        }
+
+        if (!$isAdded) {
+            $this->inputClasses[] = $class;
+        }
+    }
+
     /**
      * Build query and mutation type
      *
@@ -82,10 +98,14 @@ class TypeBuilder
         if (!empty($this->mutations))
             $type .= "\n\n" . $this->buildMutation($this->mutations);
 
-        foreach($this->collectionTypes as $collectionType) {
+        foreach ($this->collectionTypes as $collectionType) {
             $type .= $collectionType;
         }
-    
+
+        foreach ($this->inputClasses as $inputClass) {
+            $type .= $inputClass->generateInput();
+        }
+
         return $type;
     }
 

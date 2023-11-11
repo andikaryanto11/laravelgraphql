@@ -15,6 +15,7 @@ use LaravelGraphQL\Attributes\Middleware;
 use LaravelGraphQL\Attributes\Resolver;
 use LaravelGraphQL\Attributes\Type;
 use LaravelGraphQL\Inputs\AbstractInput;
+use LaravelGraphQL\Libraries\MappingTypeLibrary;
 use LaravelGraphQL\Types\GraphQLCollection;
 use ReflectionClass;
 use ReflectionMethod;
@@ -126,9 +127,10 @@ class GraphQL
                     $resolverArguments = [];
 
                     foreach ($fnParameters as $fnParameter) {
-                        $parameterType = $this->getPrimitiveTypeGraphQL($fnParameter->getType()->getName());
+                        $parameterType = MappingTypeLibrary::getPrimitiveTypeGraphQL($fnParameter->getType()->getName());
                         if(is_null($parameterType)) {
                             $inputParameter = $this->app->make($fnParameter->getType()->getName());
+                            $this->typeBuilder->addInputClasses($inputParameter);
                             $resolverArguments[] = $inputParameter;
                             $args[] = $fnParameter->getName() . ':' . $inputParameter->getInput();
                         } else {

@@ -1,13 +1,3 @@
-input SortInput {
-    field: String!
-    direction: String!
-}
-
-input PaginationInput {
-    page: Int!
-    size: Int!
-}
-
 type Paging {
     page: Int
     size: Int
