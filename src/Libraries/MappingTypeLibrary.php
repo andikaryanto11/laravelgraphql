@@ -2,11 +2,14 @@
 
 namespace LaravelGraphQL\Libraries;
 
+use GraphQL\Type\Definition\Type;
+
 class MappingTypeLibrary {
 
     protected static array $mappedPrimitiveType = [
-        'String' => 'string',
-        'Int' => 'int'
+        Type::STRING => 'string',
+        Type::INT => 'int',
+        Type::FLOAT => 'float'
     ];
 
     public static function getPrimitiveTypeGraphQL(string $type): string|null

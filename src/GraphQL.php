@@ -13,7 +13,9 @@ use LaravelCommon\ViewModels\PaggedCollection;
 use LaravelGraphQL\Attributes\Description;
 use LaravelGraphQL\Attributes\Middleware;
 use LaravelGraphQL\Attributes\Resolver;
-use LaravelGraphQL\Attributes\Type;
+use LaravelGraphQL\Attributes\Types\CollectionType;
+use LaravelGraphQL\Attributes\Types\PagedCollectionType;
+use LaravelGraphQL\Attributes\Types\Type;
 use LaravelGraphQL\Inputs\AbstractInput;
 use LaravelGraphQL\Libraries\MappingTypeLibrary;
 use LaravelGraphQL\Types\GraphQLCollection;
@@ -88,20 +90,29 @@ class GraphQL
                     $description = '';
                     $args = [];
                     $type = '';
+                    $currentTypeClass = '';
                     $middlewares = [];
                     foreach ($attrs as $attr) {
                         $attributeArgument = $attr->getArguments();
                         $attributeName = $attr->getName();
-                        // if ($attributeName == Argument::class) {
-                        //     $args =  $this->typeBuilder->buildArgument($attributeArgument[0]);
-                        // }
 
                         if ($attributeName == Description::class) {
                             $description =  $attributeArgument[0];
                         }
 
                         if ($attributeName == Type::class) {
+                            $currentTypeClass = $attributeName;
                             $type = $this->typeBuilder->buildType($attributeArgument[0]);
+                        }
+
+                        if ($attributeName == CollectionType::class) {
+                            $currentTypeClass = $attributeName;
+                            $type = $this->typeBuilder->buildCollectionType($attributeArgument[0]);
+                        }
+
+                        if ($attributeName == PagedCollectionType::class) {
+                            $currentTypeClass = $attributeName;
+                            $type = $this->typeBuilder->buildPagedCollectionType($attributeArgument[0]);
                         }
 
                         if ($attributeName == Resolver::class) {
@@ -116,8 +127,11 @@ class GraphQL
                     $resolverArguments = [];
 
                     foreach ($fnParameters as $fnParameter) {
-                        $parameterType = MappingTypeLibrary::getPrimitiveTypeGraphQL($fnParameter->getType()->getName());
-                        if(is_null($parameterType)) {
+                        $parameterType = MappingTypeLibrary::getPrimitiveTypeGraphQL(
+                            $fnParameter->getType()->getName()
+                        );
+
+                        if (is_null($parameterType)) {
                             $inputParameter = $this->app->make($fnParameter->getType()->getName());
                             $this->typeBuilder->addInputClasses($inputParameter);
                             $resolverArguments[] = $inputParameter;
@@ -133,13 +147,35 @@ class GraphQL
 
                     if (!empty($attrs)) {
                         if ($resolver == Resolver::QUERY) {
-                            $this->queries[$reflectorFunction->name] = $this->createResolver($resolverInstance,  $middlewares, $resolverArguments);
-                            $this->typeBuilder->addQuery($reflectorFunction->name, $argsString, $type, $description);
+                            $this->queries[$reflectorFunction->name] = $this->createResolver(
+                                $resolverInstance,
+                                $currentTypeClass,
+                                $middlewares,
+                                $resolverArguments
+                            );
+
+                            $this->typeBuilder->addQuery(
+                                $reflectorFunction->name,
+                                $argsString,
+                                $type,
+                                $description
+                            );
                         }
 
                         if ($resolver == Resolver::MUTATION) {
-                            $this->mutation[$reflectorFunction->name] = $this->createResolver($resolverInstance,  $middlewares, $resolverArguments);
-                            $this->typeBuilder->addMutation($reflectorFunction->name,  $argsString,  $type, $description);
+                            $this->mutation[$reflectorFunction->name] = $this->createResolver(
+                                $resolverInstance,
+                                $currentTypeClass,
+                                $middlewares,
+                                $resolverArguments
+                            );
+
+                            $this->typeBuilder->addMutation(
+                                $reflectorFunction->name,
+                                $argsString,
+                                $type,
+                                $description
+                            );
                         }
                     }
                 }
@@ -154,7 +190,7 @@ class GraphQL
      * @param array $middlewares
      * @return void
      */
-    private function createResolver($resolver, $middlewares = [], $arguments = [])
+    private function createResolver($resolver, $classType, $middlewares = [], $arguments = [])
     {
 
         $instanceMiddlwares = [];
@@ -171,6 +207,7 @@ class GraphQL
 
         return [
             'resolver' => $resolver,
+            'classType' => $classType,
             'middlewares' => $instanceMiddlwares,
             'arguments' => $arguments
         ];
@@ -231,7 +268,7 @@ class GraphQL
             if (!in_array($value, array(".", ".."))) {
                 if (!is_dir($dir . DIRECTORY_SEPARATOR . $value)) {
                     $result[$value] = $value;
-                    $this->schema .= "\n" . file_get_contents($dir . '/' . $value);
+                    $this->schema .= "\n\n" . file_get_contents($dir . '/' . $value);
                 }
             }
         }
@@ -279,6 +316,7 @@ class GraphQL
 
 
                             $resolverInstance = $resolver[$fieldName]['resolver'];
+                            $resolverClassType = $resolver[$fieldName]['classType'];
                             $resolverArguments = $resolver[$fieldName]['arguments'];
                             $resolverMiddlewares = $resolver[$fieldName]['middlewares'];
 
@@ -305,9 +343,9 @@ class GraphQL
 
                             $parameterArguments = [];
                             $index = 0;
-                            foreach($argsValues as $argsValue) {
+                            foreach ($argsValues as $argsValue) {
                                 $resolverArgument = $resolverArguments[$index];
-                                if($resolverArgument instanceof AbstractInput) {
+                                if ($resolverArgument instanceof AbstractInput) {
                                     $parameterArguments[] = $resolverArgument->parseFromArray($argsValue);
                                 } else {
                                     $parameterArguments[] = $argsValue;
@@ -320,7 +358,13 @@ class GraphQL
                             if ($resolverValue instanceof AbstractViewModel) {
                                 return $resolverValue->finalArray();
                             } elseif ($resolverValue instanceof PaggedCollection) {
-                                return (new GraphQLCollection())->buildList($resolverValue);
+                                if($resolverClassType == PagedCollectionType::class) {
+                                    return (new PagedCollectionType($resolverValue))->toArray();
+                                }
+
+                                if($resolverClassType == CollectionType::class) {
+                                    return $resolverValue->finalProcceed();
+                                }
                             } else {
                                 return null;
                             }

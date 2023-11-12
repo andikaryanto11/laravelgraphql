@@ -1,4 +1,6 @@
 type Paging {
     page: Int
-    size: Int
+    limit: Int
+    total_page: Int
+    total_data: Int
 }

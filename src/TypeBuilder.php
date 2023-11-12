@@ -2,13 +2,7 @@
 
 namespace LaravelGraphQL;
 
-use Exception;
-use Illuminate\Support\Facades\Cache;
-use LaravelGraphQL\Inputs\AbstractInput;
-use LaravelGraphQL\Types\GraphQLCollection;
-use phpDocumentor\Reflection\Types\Boolean;
-
-use function PHPSTORM_META\type;
+use LaravelGraphQL\Attributes\Types\PagedCollectionType;
 
 class TypeBuilder
 {
@@ -60,13 +54,31 @@ class TypeBuilder
      * @param string $type
      * @return string
      */
+    public function buildCollectionType(mixed $type): string
+    {
+        return '[' . $type . ']';
+    }
+    
+    /**
+     * Build type of query / mutation
+     *
+     * @param string $type
+     * @return string
+     */
+    public function buildPagedCollectionType(mixed $type): string
+    {
+        $this->collectionTypes[] = PagedCollectionType::of($type);
+        return 'PagedCollectionType' . $type;
+    }
+    
+    /**
+     * Build type of query / mutation
+     *
+     * @param string $type
+     * @return string
+     */
     public function buildType(mixed $type): string
     {
-        if (is_array($type)) {
-            $this->collectionTypes[] = GraphQLCollection::of($type[0]);
-            return 'GraphQLCollection' . $type[0];
-        }
-
         return $type;
     }
 
