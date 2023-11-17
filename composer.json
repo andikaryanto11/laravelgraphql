@@ -2,7 +2,7 @@
     "name": "andikaryanto11/laravelgraphql",
     "description": "Graphql package for Laravel",
     "require-dev": {
-        "squizlabs/php_codesniffer": "4.0.x-dev"
+        "squizlabs/php_codesniffer": "3.7"
     },
     "license": "MIT",
     "autoload": {
