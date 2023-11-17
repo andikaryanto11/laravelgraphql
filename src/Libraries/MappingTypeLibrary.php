@@ -4,8 +4,8 @@ namespace LaravelGraphQL\Libraries;
 
 use GraphQL\Type\Definition\Type;
 
-class MappingTypeLibrary {
-
+class MappingTypeLibrary
+{
     protected static array $mappedPrimitiveType = [
         Type::STRING => 'string',
         Type::INT => 'int',
@@ -22,4 +22,4 @@ class MappingTypeLibrary {
 
         return null;
     }
-} 
+}

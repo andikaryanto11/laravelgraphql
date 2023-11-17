@@ -7,14 +7,13 @@ use LaravelCommon\ViewModels\PaggedCollection;
 class PagedCollectionType
 {
     protected PaggedCollection $collection;
-    
+
     public function __construct(
         PaggedCollection $paggedCollection
-    )
-    {
+    ) {
         $this->collection = $paggedCollection;
     }
-    
+
     public static function of(string $type): string
     {
         return "\ntype PagedCollectionType$type {

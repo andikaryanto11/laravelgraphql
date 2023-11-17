@@ -8,7 +8,7 @@ use LaravelGraphQL\App\Console\Commands\ClearGraphqlSchemaCache;
 class GraphQLProvider extends ServiceProvider
 {
     public $bindings = [
-       
+
     ];
 
     /**
@@ -28,7 +28,7 @@ class GraphQLProvider extends ServiceProvider
      */
     public function boot()
     {
-       
+
         $this->loadRoutesFrom(__DIR__ . '/../../Routes/graphql.php');
         $this->publishConfig();
 
@@ -37,7 +37,6 @@ class GraphQLProvider extends ServiceProvider
                 ClearGraphqlSchemaCache::class,
             ]);
         }
-       
     }
 
     /**

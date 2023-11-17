@@ -12,7 +12,7 @@ class FilterInput extends AbstractInput
 
     /**
      * Get the value of search
-     */ 
+     */
     public function getSearch()
     {
         return $this->search;

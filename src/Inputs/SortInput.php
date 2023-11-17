@@ -13,7 +13,7 @@ class SortInput extends AbstractInput
 
     /**
      * Get the value of field
-     */ 
+     */
     public function getField(): string
     {
         return $this->field;
@@ -21,7 +21,7 @@ class SortInput extends AbstractInput
 
     /**
      * Get the value of direction
-     */ 
+     */
     public function getDirection(): string
     {
         return $this->direction;

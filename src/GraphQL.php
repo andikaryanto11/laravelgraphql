@@ -24,7 +24,6 @@ use ReflectionMethod;
 
 class GraphQL
 {
-
     public const CACHE_RESOLVERS = 'laravelgraphql_resolvers';
     public const CACHE_SCHEMAS = 'laravelgraphql_schemas';
     protected string $schema = '';
@@ -83,7 +82,6 @@ class GraphQL
             $reflectorFunctions = $reflector->getMethods(ReflectionMethod::IS_FINAL);
             foreach ($reflectorFunctions as $reflectorFunction) {
                 if ($reflectorFunction->name != '__construct') {
-
                     $attrs = $reflectorFunction->getAttributes();
                     $fnParameters = $reflectorFunction->getParameters();
                     $resolver = '';
@@ -292,10 +290,9 @@ class GraphQL
 
         $graphqlContext = $this->graphqlContext;
         Executor::setDefaultFieldResolver(function ($source, $args, $context, ResolveInfo $info)
-        use ($resolvers, $request, $contexts, $graphqlContext) {
+ use ($resolvers, $request, $contexts, $graphqlContext) {
 
             try {
-
                 $fieldName = $info->fieldName;
 
                 if (is_null($fieldName)) {
@@ -313,8 +310,6 @@ class GraphQL
 
                     if (is_array($resolver)) {
                         if (array_key_exists($fieldName, $resolver)) {
-
-
                             $resolverInstance = $resolver[$fieldName]['resolver'];
                             $resolverClassType = $resolver[$fieldName]['classType'];
                             $resolverArguments = $resolver[$fieldName]['arguments'];
@@ -358,11 +353,11 @@ class GraphQL
                             if ($resolverValue instanceof AbstractViewModel) {
                                 return $resolverValue->finalArray();
                             } elseif ($resolverValue instanceof PaggedCollection) {
-                                if($resolverClassType == PagedCollectionType::class) {
+                                if ($resolverClassType == PagedCollectionType::class) {
                                     return (new PagedCollectionType($resolverValue))->toArray();
                                 }
 
-                                if($resolverClassType == CollectionType::class) {
+                                if ($resolverClassType == CollectionType::class) {
                                     return $resolverValue->finalProcceed();
                                 }
                             } else {

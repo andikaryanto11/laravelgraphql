@@ -11,7 +11,7 @@ use LaravelGraphQL\GraphQL as RealGraphQL;
 class GraphQL extends Facade
 {
     /**
-     * 
+     *
      * @inheritdoc
      */
     protected static function getFacadeAccessor()

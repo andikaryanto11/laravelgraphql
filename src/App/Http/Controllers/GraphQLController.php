@@ -21,21 +21,20 @@ class GraphQLController extends Controller
 
     public function __construct(
         GraphQL $graphQL
-    )
-    {
-        $this->graphQL = $graphQL;  
+    ) {
+        $this->graphQL = $graphQL;
     }
 
     /**
      * /graphql
-     * 
+     *
      * @return void
      */
     public function index(Request $request)
     {
         $this->graphQL->buildResolvers($request);
         $schema = $this->graphQL->buildSchema();
-        
+
         $rawInput = file_get_contents('php://input');
         $input = json_decode($rawInput, true);
         $query = $input['query'];
@@ -54,7 +53,7 @@ class GraphQLController extends Controller
                 ]
             ];
         }
-        
+
         return response($output, 200)
                   ->header('Content-Type', 'application/json');
     }

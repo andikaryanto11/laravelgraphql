@@ -9,7 +9,7 @@ class PaginationInput extends AbstractInput
 
     /**
      * Get the value of page
-     */ 
+     */
     public function getPage(): int
     {
         return $this->page;
@@ -17,7 +17,7 @@ class PaginationInput extends AbstractInput
 
     /**
      * Get the value of size
-     */ 
+     */
     public function getSize(): int
     {
         return $this->size;

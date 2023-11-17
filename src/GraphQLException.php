@@ -4,6 +4,6 @@ namespace LaravelGraphQL;
 
 use Exception;
 
-class GraphQLException extends Exception {
-
+class GraphQLException extends Exception
+{
 }

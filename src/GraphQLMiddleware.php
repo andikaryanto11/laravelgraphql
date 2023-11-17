@@ -4,7 +4,6 @@ namespace LaravelGraphQL;
 
 class GraphQLMiddleware
 {
-
     protected $middleware = null;
     protected array $scopes = [];
 

@@ -42,8 +42,9 @@ class TypeBuilder
      */
     public function buildArgument(array $args): string
     {
-        if (empty($args))
+        if (empty($args)) {
             return '';
+        }
 
         return '(' . implode(', ', $args) . ')';
     }
@@ -58,7 +59,7 @@ class TypeBuilder
     {
         return '[' . $type . ']';
     }
-    
+
     /**
      * Build type of query / mutation
      *
@@ -70,7 +71,7 @@ class TypeBuilder
         $this->collectionTypes[] = PagedCollectionType::of($type);
         return 'PagedCollectionType' . $type;
     }
-    
+
     /**
      * Build type of query / mutation
      *
@@ -104,11 +105,13 @@ class TypeBuilder
     public function build(): string
     {
         $type = '';
-        if (!empty($this->queries))
+        if (!empty($this->queries)) {
             $type .= $this->buildQuery($this->queries);
+        }
 
-        if (!empty($this->mutations))
+        if (!empty($this->mutations)) {
             $type .= "\n\n" . $this->buildMutation($this->mutations);
+        }
 
         foreach ($this->collectionTypes as $collectionType) {
             $type .= $collectionType;

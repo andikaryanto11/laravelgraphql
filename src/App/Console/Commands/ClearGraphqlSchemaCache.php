@@ -4,7 +4,8 @@ namespace LaravelGraphQL\App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use LaravelGraphQL\GraphQL;use Illuminate\Support\Str;
+use LaravelGraphQL\GraphQL;
+use Illuminate\Support\Str;
 
 class ClearGraphqlSchemaCache extends Command
 {

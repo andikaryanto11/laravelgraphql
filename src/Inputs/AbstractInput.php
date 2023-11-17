@@ -34,7 +34,8 @@ abstract class AbstractInput
         return $this->getClassName() . " = { $input }";
     }
 
-    private function getClassName() {
+    private function getClassName()
+    {
 
         $namespaces = explode('\\', static::class);
         return $namespaces[count($namespaces) - 1];
@@ -42,7 +43,6 @@ abstract class AbstractInput
 
     private function getProperties()
     {
-
         $reflectoionClass = (new ReflectionClass(static::class));
         $reflectorProperties = $reflectoionClass->getProperties(ReflectionProperty::IS_PROTECTED);
         return $reflectorProperties;
@@ -68,7 +68,6 @@ abstract class AbstractInput
         return "\ninput $className {
     $graphQLProp
 }\n";
-        
     }
 
     public function parseFromArray(array $values)

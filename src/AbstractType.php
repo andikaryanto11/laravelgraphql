@@ -2,19 +2,18 @@
 
 namespace LaravelGraphQL;
 
-
-abstract class AbstractType{
-
+abstract class AbstractType
+{
     /**
      * Type name
-     * 
+     *
      * @return string
      */
     abstract public function name();
 
     /**
      * Type description
-     * 
+     *
      * @return string
      */
     abstract public function description();

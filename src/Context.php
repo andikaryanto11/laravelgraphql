@@ -2,6 +2,6 @@
 
 namespace LaravelGraphQL;
 
-class Context {
-
+class Context
+{
 }

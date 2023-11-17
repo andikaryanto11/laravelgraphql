@@ -2,7 +2,6 @@
 
 namespace LaravelGraphQL\Attributes;
 
-
 class Argument
 {
 }
