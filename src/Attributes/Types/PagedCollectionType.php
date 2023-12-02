@@ -25,7 +25,7 @@ class PagedCollectionType
     public function toArray()
     {
         return [
-            'list' => $this->collection->finalProcceed(),
+            'list' => $this->collection->finalArray(),
             'paging' => [
                 'page' => $this->collection->getPage(),
                 'limit' => $this->collection->getSize(),

@@ -358,7 +358,7 @@ class GraphQL
                                 }
 
                                 if ($resolverClassType == CollectionType::class) {
-                                    return $resolverValue->finalProcceed();
+                                    return $resolverValue->finalArray();
                                 }
                             } else {
                                 return null;
